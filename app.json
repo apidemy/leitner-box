@@ -1,0 +1,12 @@
+{
+  "name": "LeitnerBox-simple",
+  "displayName": "LeitnerBox-simple",
+  "expo": {
+    "name": "LeitnerBox-simple",
+    "slug": "LeitnerBox-simple",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
