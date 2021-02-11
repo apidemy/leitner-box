@@ -1,17 +1,15 @@
-import * as React from 'react'
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {Text, StyleSheet, View, Button} from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler';
 
 let id = 0;
 let leitnerArr = [];
 
-
 const HomeScreen = ({navigation, route}) => {
 
     const [a, setA] = useState('');
 
-    React.useEffect(() => {
+    useEffect(() => {
         if(route.params?.word)
         {
             setA(route.params.word);
@@ -27,13 +25,13 @@ const HomeScreen = ({navigation, route}) => {
         <View style={styles.Container}>
             <Text>this is home screen</Text>
             <View style={styles.button}>
-                <Button title='Add' onPress = {() => navigation.navigate('AddWords', { word:'z', meaning:'0' }) }/>
+                <Button title='Add' onPress = {() => navigation.navigate('AddWords', [{ word:'', meaning:'' }]) }/>
                 <Button title='Start Learning' onPress = {() => navigation.navigate('LearnWords') } />
                 <Button title='Words List' onPress = {() => navigation.navigate('WordsList') } />
             </View>
             <ScrollView>
                 {leitnerArr.map( val  => (
-                    <Text>word : {val.word} = meaning: {val.meaning}</Text>
+                    <Text key={val.id}>word : {val.word} = meaning: {val.meaning}</Text>
                 ) )}
             </ScrollView>
         </View>
@@ -47,7 +45,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     button: {
-        flexDirection: 'row',
+        // flexDirection: 'row',
       },
 });
 
