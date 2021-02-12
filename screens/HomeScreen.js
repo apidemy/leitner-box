@@ -25,7 +25,7 @@ const HomeScreen = ({navigation, route}) => {
         <View style={styles.Container}>
             <Text>this is home screen</Text>
             <View style={styles.button}>
-                <Button title='Add' onPress = {() => navigation.navigate('AddWords', [{ word:'', meaning:'' }]) }/>
+                <Button title='Add' onPress = {() => navigation.navigate('AddWords') }/>
                 <Button title='Start Learning' onPress = {() => navigation.navigate('LearnWords') } />
                 <Button title='Words List' onPress = {() => navigation.navigate('WordsList') } />
             </View>

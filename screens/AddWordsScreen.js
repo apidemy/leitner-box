@@ -19,13 +19,121 @@ function reducer(wordItem, action) {
     }
 }
 
+const addCard = (wordItem) => {
+  // is text empty?
+  if (wordItem.word === null || wordItem.word === '') {
+      console.log("no word typed")
+    return false;
+  }
+
+  db.transaction(
+    tx => {
+      tx.executeSql('insert into words (word, meaning, comment) values (?, ?, ?)', [wordItem.word, wordItem.meaning, wordItem.comment],
+      (tx, results) => {
+          console.log('Results', results.rowsAffected);
+          if (results.rowsAffected > 0) {
+            Alert.alert(
+              'Success',
+              'Your Word Added Successfully',
+              [
+                {
+                  text: 'Ok',
+                  onPress: () => navigation.navigate('Home'),
+                },
+              ],
+              { cancelable: false }
+            );
+          } else alert('Registration Failed');
+        }
+
+      );
+    },
+  );
+}
+
+const updateWord = (wordItem) => {
+    console.log(wordItem)
+    db.transaction((tx) => {
+        tx.executeSql(
+          'UPDATE words set word=?, meaning=? , comment=? where id=?',
+          [wordItem.word, wordItem.meaning, wordItem.comment, wordItem.id],
+          (tx, results) => {
+            console.log('Results', results.rowsAffected);
+            if (results.rowsAffected > 0) {
+              Alert.alert(
+                'Success',
+                'Card updated successfully',
+                [
+                  {
+                    text: 'Ok',
+                    // onPress: () => navigation.navigate('HomeScreen'),
+                  },
+                ],
+                { cancelable: false }
+              );
+            } else alert('Update Failed');
+          }
+        );
+      });
+};
+
+const HandleButton = (props) => {
+  if(props.wordItem.id == undefined || props.wordItem.id < 0) {
+    return (
+      <View>
+        <Button title="Add" onPress={() => addCard(props.wordItem)}/>
+        <Button title = 'Back' onPress = {() => {
+                  props.navigation.navigate('Home');
+          } } />
+      </View> 
+    );
+  } else {
+    return (
+      <View>
+        <Button title="Update" onPress={() => updateWord(props.wordItem)}/>
+        <Button title = 'Back' onPress = {() => {
+                  props.navigation.navigate('Home');
+          } } />
+      </View> 
+    );
+  }
+}
+
 const AddWrodsScreen = ({navigation, route}) => {
 
+    const cardId = route.params;
+
     const [wordItem, dispatchWordItem] = useReducer(reducer, {
+        id: cardId,
+        // box: 1,
         word: '',
         meaning: '',
         comment: '',
     });
+
+    
+    // const fetchWordValues = (cardId) => {
+    //   if(cardId == undefined) {
+    //     return;
+    //   }
+    
+    //   db.transaction((tx) => {
+    //     tx.executeSql(
+    //       'SELECT * FROM words where id = ?',
+    //       [cardId],
+    //       (tx, results) => {
+    //         var len = results.rows.length;
+    //         if (len > 0) {
+    //           let res = results.rows.item(0);
+    //           return res;
+    //           console.log("befor:");
+    //           console.log(res);
+    //         }
+    //       }
+    //     );
+    //   });
+    // }
+
 
     React.useEffect(() => {
         db.transaction(tx => {
@@ -37,44 +145,26 @@ const AddWrodsScreen = ({navigation, route}) => {
                         'comment varchar(255));'
           );
         });
-      }, []);
 
-      const add = (wordItem) => {
-        // is text empty?
-        if (wordItem.word === null || wordItem.word === '') {
-            console.log("no word typed")
-          return false;
-        }
-    
-        db.transaction(
-          tx => {
-            tx.executeSql('insert into words (word, meaning, comment) values (?, ?, ?)', [wordItem.word, wordItem.meaning, wordItem.comment],
-            (tx, results) => {
-                console.log('Results', results.rowsAffected);
-                if (results.rowsAffected > 0) {
-                  Alert.alert(
-                    'Success',
-                    'Your Word Added Successfully',
-                    [
-                      {
-                        text: 'Ok',
-                        onPress: () => navigation.navigate('Home'),
-                      },
-                    ],
-                    { cancelable: false }
-                  );
-                } else alert('Registration Failed');
+        if(cardId != undefined) {
+          db.transaction((tx) => {
+            tx.executeSql(
+              'SELECT * FROM words where id = ?',
+              [cardId],
+              (tx, results) => {
+                var len = results.rows.length;
+                if (len > 0) {
+                  let res = results.rows.item(0);
+                  dispatchWordItem({type:'word', value: res.word})
+                  dispatchWordItem({type:'meaning', value: res.meaning})
+                  dispatchWordItem({type:'comment', value: res.comment})
+                }
               }
-
             );
-            // tx.executeSql('select * from items', [], (_, { rows }) =>
-            //   console.log(JSON.stringify(rows))
-            // );
-          },
-        //   null,
-        // forceUpdate
-        );
-      }
+          });
+        }
+
+      }, []);
 
     return(
         <View style = {styles.Container}>
@@ -89,7 +179,7 @@ const AddWrodsScreen = ({navigation, route}) => {
                     value={wordItem.meaning}
                     onChangeText = {(text) => dispatchWordItem({type:'meaning', value: text})}
                     // onSubmitEditing={() => {
-                    //     add(text);
+                    //     addCard(text);
                     //     setThisMeaning(null);
                     //   }}
                 />
@@ -100,10 +190,8 @@ const AddWrodsScreen = ({navigation, route}) => {
                 />
                 <Text>Result: {wordItem.word} = {wordItem.meaning} and {wordItem.comment}</Text>
             </View>
-            <Button title="Add" onPress={() => add(wordItem)}/>
-            <Button title = 'Back' onPress = {() => {
-                navigation.navigate('Home');
-            } } />
+            <HandleButton navigation={navigation} wordItem={wordItem}/>
+            
         </View>
     );
 };

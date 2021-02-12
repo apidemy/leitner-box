@@ -4,14 +4,14 @@ import Constants from 'expo-constants';
 import * as SQLite from 'expo-sqlite';
 import {useEffect, useState} from "react";
 
-
 const db = SQLite.openDatabase('leitnerboxdb.db');
 
-const UpdateButtons = props => {
+const UpdateButtons = (props) => {
+
     return (
         <View style={styles.flexRow}>
             <View style={styles.changeButtons}>
-                <Button title="Edit"/>
+                <Button title="Edit" onPress={() => props.navigation.navigate('AddWords', props.id)}/>
             </View>
             <View style={styles.changeButtons}>
                 <Button title="Delete" onPress={ () => deleteWord(props.id)}/>
@@ -20,7 +20,7 @@ const UpdateButtons = props => {
     );
 }
 
-let deleteWord = (id) => {
+const deleteWord = (id) => {
     db.transaction((tx) => {
         tx.executeSql(
             'DELETE FROM words WHERE id =?',
@@ -34,8 +34,7 @@ let deleteWord = (id) => {
         });
   }
 
-
-const WordsListScreen = ({navigation}) => {
+const WordsListScreen = ({navigation, route}) => {
 
     useEffect(() => {
         db.transaction((tx) => {
@@ -75,7 +74,7 @@ const WordsListScreen = ({navigation}) => {
             <Text>Word: {item.word}</Text>
             <Text>Meaning: {item.meaning}</Text>
             <Text>Comment: {item.comment}</Text>
-            <UpdateButtons id={item.id} />
+            <UpdateButtons navigation={navigation} id={item.id} />
           </View>
         );
       };
