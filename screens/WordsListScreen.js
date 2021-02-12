@@ -23,13 +23,14 @@ const UpdateButtons = (props) => {
 const deleteWord = (id) => {
     db.transaction((tx) => {
         tx.executeSql(
-            'DELETE FROM words WHERE id =?',
+            'DELETE FROM cards WHERE id =?',
             [id],
             (tx, results) => {
                 if(results.rowsAffected > 0) {
                     Alert.alert('Success', 'Word deleted', [{text:'Ok'}]);
                 } 
-            }
+            },
+          (tx, error) => console.error(error)
         );
         });
   }
@@ -39,14 +40,15 @@ const WordsListScreen = ({navigation, route}) => {
     useEffect(() => {
         db.transaction((tx) => {
         tx.executeSql(
-            'SELECT * FROM words',
+            'SELECT * FROM cards',
             [],
             (tx, results) => {
             var temp = [];
             for (let i = 0; i < results.rows.length; ++i)
                 temp.push(results.rows.item(i));
             setFlatListItems(temp);
-            }
+            },
+          (tx, error) => console.error(error)
         );
         });
     }, []);

@@ -9,26 +9,32 @@ const db = SQLite.openDatabase('leitnerboxdb.db');
 
 function reducer(wordItem, action) {
     switch(action.type) {
-        case 'word':
-            return {...wordItem, word: action.value};
-        case 'meaning':
-            return {...wordItem, meaning: action.value};
-        case 'comment':
-            return {...wordItem, comment: action.value};
+      case 'box':
+            return {...wordItem, box: action.value};  
+      case 'card':
+            return {...wordItem, card: action.value};
+      case 'meaning':
+          return {...wordItem, meaning: action.value};
+      case 'comment':
+          return {...wordItem, comment: action.value};
+      case 'timestamp':
+            return {...wordItem, timestamp: action.value};
 
     }
 }
 
 const addCard = (wordItem) => {
   // is text empty?
-  if (wordItem.word === null || wordItem.word === '') {
-      console.log("no word typed")
+  console.log(wordItem)
+  if (wordItem.card === null || wordItem.card === '') {
+      console.log("no card typed")
     return false;
   }
 
   db.transaction(
     tx => {
-      tx.executeSql('insert into words (word, meaning, comment) values (?, ?, ?)', [wordItem.word, wordItem.meaning, wordItem.comment],
+      tx.executeSql('insert into cards (card, meaning, comment, box) values (?, ?, ?, ?)',
+      [wordItem.card, wordItem.meaning, wordItem.comment, wordItem.box],
       (tx, results) => {
           console.log('Results', results.rowsAffected);
           if (results.rowsAffected > 0) {
@@ -44,9 +50,9 @@ const addCard = (wordItem) => {
               { cancelable: false }
             );
           } else alert('Registration Failed');
-        }
+        }, (tx, error) => console.error(error)
 
-      );
+      )
     },
   );
 }
@@ -55,8 +61,8 @@ const updateWord = (wordItem) => {
     console.log(wordItem)
     db.transaction((tx) => {
         tx.executeSql(
-          'UPDATE words set word=?, meaning=? , comment=? where id=?',
-          [wordItem.word, wordItem.meaning, wordItem.comment, wordItem.id],
+          'UPDATE cards set card=?, meaning=? , comment=? where id=?',
+          [wordItem.card, wordItem.meaning, wordItem.comment, wordItem.id],
           (tx, results) => {
             console.log('Results', results.rowsAffected);
             if (results.rowsAffected > 0) {
@@ -72,7 +78,8 @@ const updateWord = (wordItem) => {
                 { cancelable: false }
               );
             } else alert('Update Failed');
-          }
+          },
+          (tx, error) => console.error(error)
         );
       });
 };
@@ -105,61 +112,44 @@ const AddWrodsScreen = ({navigation, route}) => {
 
     const [wordItem, dispatchWordItem] = useReducer(reducer, {
         id: cardId,
-        // box: 1,
-        word: '',
+        box: 1,
+        card: '',
         meaning: '',
         comment: '',
     });
 
-    
-    // const fetchWordValues = (cardId) => {
-    //   if(cardId == undefined) {
-    //     return;
-    //   }
-    
-    //   db.transaction((tx) => {
-    //     tx.executeSql(
-    //       'SELECT * FROM words where id = ?',
-    //       [cardId],
-    //       (tx, results) => {
-    //         var len = results.rows.length;
-    //         if (len > 0) {
-    //           let res = results.rows.item(0);
-    //           return res;
-    //           console.log("befor:");
-    //           console.log(res);
-    //         }
-    //       }
-    //     );
-    //   });
-    // }
-
-
     React.useEffect(() => {
         db.transaction(tx => {
           tx.executeSql(
-            'create table if not exists words ('+
+            'create table if not exists cards ('+
                         'id integer primary key not null,' +
-                        'word varchar(255),' +
+                        'box integer,' +
+                        'card varchar(255),' +
                         'meaning varchar(255),' +
-                        'comment varchar(255));'
+                        'comment varchar(255),' +
+                        'timestamp TEXT);',
+            [],
+            () => {
+            },
+            (tx, error) => console.error(error)
           );
         });
 
         if(cardId != undefined) {
           db.transaction((tx) => {
             tx.executeSql(
-              'SELECT * FROM words where id = ?',
+              'SELECT * FROM cards where id = ?',
               [cardId],
               (tx, results) => {
                 var len = results.rows.length;
                 if (len > 0) {
                   let res = results.rows.item(0);
-                  dispatchWordItem({type:'word', value: res.word})
+                  dispatchWordItem({type:'card', value: res.card})
                   dispatchWordItem({type:'meaning', value: res.meaning})
                   dispatchWordItem({type:'comment', value: res.comment})
                 }
-              }
+              },
+              (tx, error) => console.error(error)
             );
           });
         }
@@ -170,9 +160,9 @@ const AddWrodsScreen = ({navigation, route}) => {
         <View style = {styles.Container}>
             <View style = {styles.SearchView}>
                 <TextInput style = {styles.SearchView} 
-                    placeholder = 'Type a word '
-                    value={wordItem.word}
-                    onChangeText = {(text) => dispatchWordItem({type:'word', value: text})}
+                    placeholder = 'Type a Word '
+                    value={wordItem.card}
+                    onChangeText = {(text) => dispatchWordItem({type:'card', value: text})}
                 />
                 <TextInput style = {styles.SearchView} 
                     placeholder = 'Type meaning ' 
@@ -188,7 +178,6 @@ const AddWrodsScreen = ({navigation, route}) => {
                     value={wordItem.comment}
                     onChangeText = {(text) => dispatchWordItem({type:'comment', value: text})}
                 />
-                <Text>Result: {wordItem.word} = {wordItem.meaning} and {wordItem.comment}</Text>
             </View>
             <HandleButton navigation={navigation} wordItem={wordItem}/>
             
