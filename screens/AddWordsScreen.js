@@ -23,6 +23,16 @@ function reducer(wordItem, action) {
     }
 }
 
+const getCurrentDate = () => {
+  var date = new Date().getDate(); //Current Date
+    var month = new Date().getMonth() + 1; //Current Month
+    var year = new Date().getFullYear(); //Current Year
+    var hours = new Date().getHours(); //Current Hours
+    var min = new Date().getMinutes(); //Current Minutes
+    var sec = new Date().getSeconds(); //Current Seconds
+    return year +'-'+ month+'-' +date + ' ' + hours + ':' + min + ':' + sec;
+}
+
 const addCard = (wordItem) => {
   // is text empty?
   console.log(wordItem)
@@ -33,8 +43,8 @@ const addCard = (wordItem) => {
 
   db.transaction(
     tx => {
-      tx.executeSql('insert into cards (card, meaning, comment, box) values (?, ?, ?, ?)',
-      [wordItem.card, wordItem.meaning, wordItem.comment, wordItem.box],
+      tx.executeSql('insert into cards (card, meaning, comment, box, timestamp) values (?, ?, ?, ?,?)',
+      [wordItem.card, wordItem.meaning, wordItem.comment, wordItem.box, getCurrentDate()],
       (tx, results) => {
           console.log('Results', results.rowsAffected);
           if (results.rowsAffected > 0) {
@@ -116,6 +126,7 @@ const AddWrodsScreen = ({navigation, route}) => {
         card: '',
         meaning: '',
         comment: '',
+        timestamp: '',
     });
 
     React.useEffect(() => {

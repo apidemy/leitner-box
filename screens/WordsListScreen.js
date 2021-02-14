@@ -3,6 +3,7 @@ import {Text, StyleSheet, SafeAreaView, View, FlatList, Button, Alert} from 'rea
 import Constants from 'expo-constants';
 import * as SQLite from 'expo-sqlite';
 import {useEffect, useState} from "react";
+import { setStatusBarBackgroundColor } from 'expo-status-bar';
 
 const db = SQLite.openDatabase('leitnerboxdb.db');
 
@@ -14,13 +15,16 @@ const UpdateButtons = (props) => {
                 <Button title="Edit" onPress={() => props.navigation.navigate('AddWords', props.id)}/>
             </View>
             <View style={styles.changeButtons}>
-                <Button title="Delete" onPress={ () => deleteWord(props.id)}/>
+                <Button title="Delete" onPress={ () => deleteWord(props.id, props.cards)}/>
             </View>
         </View>
     );
 }
 
-const deleteWord = (id) => {
+const deleteWord = (id, setFlatListItems, items) => {
+  console.log(items)
+  const filteredData = items.filter(item => item.id !== id);
+  setFlatListItems(filteredData)
     db.transaction((tx) => {
         tx.executeSql(
             'DELETE FROM cards WHERE id =?',
@@ -28,6 +32,7 @@ const deleteWord = (id) => {
             (tx, results) => {
                 if(results.rowsAffected > 0) {
                     Alert.alert('Success', 'Word deleted', [{text:'Ok'}]);
+
                 } 
             },
           (tx, error) => console.error(error)
@@ -46,6 +51,7 @@ const WordsListScreen = ({navigation, route}) => {
             var temp = [];
             for (let i = 0; i < results.rows.length; ++i)
                 temp.push(results.rows.item(i));
+            console.log(temp)
             setFlatListItems(temp);
             },
           (tx, error) => console.error(error)
@@ -73,10 +79,18 @@ const WordsListScreen = ({navigation, route}) => {
           <View
             key={item.id}
             style={{ backgroundColor: 'white', padding: 20 }}>
-            <Text>Word: {item.word}</Text>
+            <Text>Word: {item.card}</Text>
             <Text>Meaning: {item.meaning}</Text>
             <Text>Comment: {item.comment}</Text>
-            <UpdateButtons navigation={navigation} id={item.id} />
+            {/* <UpdateButtons cards={this.state} navigation={navigation} id={item.id} /> */}
+            <View style={styles.flexRow}>
+            <View style={styles.changeButtons}>
+                <Button title="Edit" onPress={() => navigation.navigate('AddWords', item.id)}/>
+            </View>
+            <View style={styles.changeButtons}>
+                <Button title="Delete" onPress={ () => deleteWord(item.id, setFlatListItems, flatListItems)}/>
+            </View>
+        </View>
           </View>
         );
       };
