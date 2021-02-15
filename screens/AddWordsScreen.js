@@ -33,10 +33,9 @@ const getCurrentDate = () => {
     return year +'-'+ month+'-' +date + ' ' + hours + ':' + min + ':' + sec;
 }
 
-const addCard = (wordItem) => {
+const addCard = (props) => {
   // is text empty?
-  console.log(wordItem)
-  if (wordItem.card === null || wordItem.card === '') {
+  if (props.wordItem.card === null || props.wordItem.card === '') {
       console.log("no card typed")
     return false;
   }
@@ -44,7 +43,7 @@ const addCard = (wordItem) => {
   db.transaction(
     tx => {
       tx.executeSql('insert into cards (card, meaning, comment, box, timestamp) values (?, ?, ?, ?,?)',
-      [wordItem.card, wordItem.meaning, wordItem.comment, wordItem.box, getCurrentDate()],
+      [props.wordItem.card, props.wordItem.meaning, props.wordItem.comment, props.wordItem.box, getCurrentDate()],
       (tx, results) => {
           console.log('Results', results.rowsAffected);
           if (results.rowsAffected > 0) {
@@ -54,7 +53,7 @@ const addCard = (wordItem) => {
               [
                 {
                   text: 'Ok',
-                  onPress: () => navigation.navigate('Home'),
+                  onPress: () => props.navigation.navigate('Home'),
                 },
               ],
               { cancelable: false }
@@ -68,7 +67,6 @@ const addCard = (wordItem) => {
 }
 
 const updateWord = (wordItem) => {
-    console.log(wordItem)
     db.transaction((tx) => {
         tx.executeSql(
           'UPDATE cards set card=?, meaning=? , comment=? where id=?',
@@ -98,7 +96,7 @@ const HandleButton = (props) => {
   if(props.wordItem.id == undefined || props.wordItem.id < 0) {
     return (
       <View>
-        <Button title="Add" onPress={() => addCard(props.wordItem)}/>
+        <Button title="Add" onPress={() => addCard(props)}/>
         <Button title = 'Back' onPress = {() => {
                   props.navigation.navigate('Home');
           } } />
