@@ -12,6 +12,7 @@ import Carousel from 'react-native-snap-carousel';
 const db = SQLite.openDatabase('leitnerboxdb.db');
 
 const latestBox = 3; // Greates litner box number
+const numOfBox1Items = 5;
 
 const getCurrentDate = () => {
   var date = new Date().getDate(); //Current Date
@@ -23,7 +24,55 @@ const getCurrentDate = () => {
     return year +'-'+ month+'-' +date + ' ' + hours + ':' + min + ':' + sec;
 }
 
-// const LearnWordsScreen = ({navigation}) => {
+const updateDB = (items) => {
+
+  for (let i = 0; i < items.length; ++i)
+  {
+    // temp.push(items.item(i));
+    db.transaction((tx) => {
+      tx.executeSql(
+        'UPDATE cards SET box=?, timestamp=? WHERE id=?',
+        [items[i].box, items[i].timestamp, items[i].id],
+        (tx, results) => {
+          console.log('Results', results.rowsAffected);
+          // if (results.rowsAffected > 0) {
+          //   Alert.alert(
+          //     'Success',
+          //     'User updated successfully',
+          //     [
+          //       {
+          //         text: 'Ok',
+          //         // onPress: () => navigation.navigate('HomeScreen'),
+          //       },
+          //     ],
+          //     { cancelable: false }
+          //   );
+          // } else alert('Updation Failed');
+        }
+      );
+    });
+  }
+}
+
+const fetchCards = async (boxId, numLimit) => {
+
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+          'SELECT * FROM cards WHERE box=? LIMIT ?;',
+          [boxId, numLimit],
+          (tx, results) => {
+          let temp = [];
+          for (let i = 0; i < results.rows.length; ++i)
+            temp.push(results.rows.item(i));
+          resolve(temp);
+          },
+        (tx, error) => console.error(error)
+      );
+      });
+  });
+   
+}
 export default class LearnWordsScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -32,21 +81,26 @@ export default class LearnWordsScreen extends React.Component {
     activeIndex: 0,
     flatListItems: [],
     }
+    
+    this.getCardForCarosul(); // Leitner algo
+  }
 
-    db.transaction((tx) => {
-      tx.executeSql(
-          'SELECT * FROM cards',
-          [],
-          (tx, results) => {
-          var temp = [];
-          for (let i = 0; i < results.rows.length; ++i)
-              temp.push(results.rows.item(i));
-          // TODO: sort temp by box
-          this.setState({flatListItems:temp});
-          },
-        (tx, error) => console.error(error)
-      );
-      });
+  async getCardForCarosul() {
+    let temp =  [];
+
+    // for box 1
+    temp = await fetchCards(1, numOfBox1Items);
+    this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
+
+    // // for box 2
+    temp = await fetchCards(2, numOfBox1Items);
+    this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
+
+    // // for box 3
+    temp = await fetchCards(3, numOfBox1Items);
+    this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
+
+    console.log(this.state.flatListItems)
   }
 
   updateItem(didYouKnow) {
@@ -57,7 +111,7 @@ export default class LearnWordsScreen extends React.Component {
     if(didYouKnow)
       box = Math.min(box + 1, latestBox);
     else
-      box = Math.max(1, box-1);
+      box = 1; // go to first box
 
     this.state.flatListItems[index] = {
         ...this.state.flatListItems[index],
@@ -67,6 +121,7 @@ export default class LearnWordsScreen extends React.Component {
 
     if(index === this.state.flatListItems.length - 1)
       {
+        updateDB(this.state.flatListItems);
         Alert.alert(
           'Review finished',
           'All todays words reviewed',
@@ -104,7 +159,7 @@ export default class LearnWordsScreen extends React.Component {
                   sliderWidth={300}
                   itemWidth={Dimensions.get('window').width}
                   renderItem={this._renderItem}
-                  // scrollEnabled={false}
+                  scrollEnabled={false}
                   onSnapToItem = { index => this.setState({activeIndex:index}) } />
             </View>
             <View style={styles.buttons}>
