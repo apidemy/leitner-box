@@ -1,9 +1,8 @@
 import * as React from 'react';
-import {Text, StyleSheet, SafeAreaView, View, FlatList, Button, Alert} from 'react-native';
+import {Text, StyleSheet, SafeAreaView, View, FlatList, Button, ToastAndroid} from 'react-native';
 import Constants from 'expo-constants';
 import * as SQLite from 'expo-sqlite';
 import {useEffect, useState} from "react";
-import { setStatusBarBackgroundColor } from 'expo-status-bar';
 
 const db = SQLite.openDatabase('leitnerboxdb.db');
 
@@ -30,8 +29,7 @@ const deleteWord = (id, setFlatListItems, items) => {
             [id],
             (tx, results) => {
                 if(results.rowsAffected > 0) {
-                    Alert.alert('Success', 'Word deleted', [{text:'Ok'}]);
-
+                  ToastAndroid.show("Word deleted", ToastAndroid.SHORT);
                 } 
             },
           (tx, error) => console.error(error)
@@ -41,8 +39,11 @@ const deleteWord = (id, setFlatListItems, items) => {
 
 const WordsListScreen = ({navigation, route}) => {
 
-    useEffect(() => {
-        db.transaction((tx) => {
+
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+
+      db.transaction((tx) => {
         tx.executeSql(
             'SELECT * FROM cards',
             [],
@@ -56,7 +57,15 @@ const WordsListScreen = ({navigation, route}) => {
           (tx, error) => console.error(error)
         );
         });
-    }, []);
+
+
+
+    });
+
+    // Return the function to unsubscribe from the event so it gets removed on unmount
+    return unsubscribe;
+  }, [navigation]);
+
 
 
     let [flatListItems, setFlatListItems] = useState([]);
@@ -97,6 +106,14 @@ const WordsListScreen = ({navigation, route}) => {
     return(
 
         <SafeAreaView style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontSize: 18,
+            textAlign: 'center',
+            color: 'grey'
+          }}>
+          List of all words you have added
+        </Text>
         <View style={{ flex: 1, backgroundColor: 'white' }}>
           <View style={{ flex: 1 }}>
             <FlatList
@@ -106,14 +123,6 @@ const WordsListScreen = ({navigation, route}) => {
               renderItem={({ item }) => listItemView(item)}
             />
           </View>
-          <Text
-            style={{
-              fontSize: 18,
-              textAlign: 'center',
-              color: 'grey'
-            }}>
-            Example of SQLite Database in React Native
-          </Text>
         </View>
       </SafeAreaView>
     );

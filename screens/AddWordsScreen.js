@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Text, StyleSheet, View, Button, Alert} from 'react-native'
+import {Text, StyleSheet, View, Button, Alert, ToastAndroid} from 'react-native'
 import { TextInput } from 'react-native-gesture-handler';
 import * as SQLite from 'expo-sqlite';
 import { useReducer } from 'react';
@@ -37,33 +37,35 @@ const addCard = (props) => {
   // is text empty?
   if (props.wordItem.card === null || props.wordItem.card === '') {
       console.log("no card typed")
-    return false;
+      ToastAndroid.show("Type a word to add", ToastAndroid.SHORT);
+    return Promise.reject(false);
   }
 
-  db.transaction(
-    tx => {
-      tx.executeSql('insert into cards (card, meaning, comment, box, timestamp) values (?, ?, ?, ?,?)',
-      [props.wordItem.card, props.wordItem.meaning, props.wordItem.comment, props.wordItem.box, getCurrentDate()],
-      (tx, results) => {
-          console.log('Results', results.rowsAffected);
-          if (results.rowsAffected > 0) {
-            Alert.alert(
-              'Success',
-              'Your Word Added Successfully',
-              [
-                {
-                  text: 'Ok',
-                  onPress: () => props.navigation.navigate('Home'),
-                },
-              ],
-              { cancelable: false }
-            );
-          } else alert('Registration Failed');
-        }, (tx, error) => console.error(error)
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      tx => {
+        tx.executeSql('insert into cards (card, meaning, comment, box, timestamp) values (?, ?, ?, ?,?)',
+        [props.wordItem.card, props.wordItem.meaning, props.wordItem.comment, props.wordItem.box, getCurrentDate()],
+        (tx, results) => {
+            console.log('Results', results.rowsAffected);
+            if (results.rowsAffected > 0) {
+              ToastAndroid.show("Word added", ToastAndroid.SHORT);
 
-      )
-    },
-  );
+              resolve(true);
+            } else {
+              ToastAndroid.show("Cannot a add word.", ToastAndroid.SHORT);
+
+              reject(false);
+            }
+          }, (tx, error) => {
+            console.error(error);
+            reject(false);
+          }
+        )
+      },
+    );
+  });
+  
 }
 
 const updateWord = (wordItem) => {
@@ -96,19 +98,23 @@ const HandleButton = (props) => {
   if(props.wordItem.id == undefined || props.wordItem.id < 0) {
     return (
       <View>
-        <Button title="Add" onPress={() => addCard(props)}/>
-        <Button title = 'Back' onPress = {() => {
-                  props.navigation.navigate('Home');
-          } } />
+        <Button title="Add" onPress={ async () => {
+          
+            let res = await addCard(props);
+            if(res === true) {
+              // TODO: clear input boxes while a word added
+              // dispatchWordItem({type:'card', value: ''})
+              // dispatchWordItem({type:'meaning', value: ''})
+              // dispatchWordItem({type:'comment', value: ''})
+            }
+          }
+        }/>
       </View> 
     );
   } else {
     return (
       <View>
         <Button title="Update" onPress={() => updateWord(props.wordItem)}/>
-        <Button title = 'Back' onPress = {() => {
-                  props.navigation.navigate('Home');
-          } } />
       </View> 
     );
   }
@@ -128,6 +134,8 @@ const AddWrodsScreen = ({navigation, route}) => {
     });
 
     React.useEffect(() => {
+      const unsubscribe = navigation.addListener('focus', () => {
+
         db.transaction(tx => {
           tx.executeSql(
             'create table if not exists cards ('+
@@ -162,8 +170,17 @@ const AddWrodsScreen = ({navigation, route}) => {
             );
           });
         }
+        else {
+          dispatchWordItem({type:'card', value: ''})
+          dispatchWordItem({type:'meaning', value: ''})
+          dispatchWordItem({type:'comment', value: ''})
+        }
 
       }, []);
+
+      // Return the function to unsubscribe from the event so it gets removed on unmount
+      return unsubscribe;
+    }, [navigation]);
 
     return(
         <View style = {styles.Container}>

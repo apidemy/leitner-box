@@ -6,7 +6,13 @@ import {Text, StyleSheet, SafeAreaView,
   Dimensions}
 from 'react-native';
 import * as SQLite from 'expo-sqlite';
+import styles, { colors } from '../styles/index.style';
 import Carousel from 'react-native-snap-carousel';
+
+
+const IS_ANDROID = Platform.OS === 'android';
+const SLIDER_1_FIRST_ITEM = 1;
+
 
 
 const db = SQLite.openDatabase('leitnerboxdb.db');
@@ -67,22 +73,56 @@ const fetchCards = async (boxId, numLimit) => {
             temp.push(results.rows.item(i));
           resolve(temp);
           },
-        (tx, error) => console.error(error)
+        (tx, error) => {
+          console.error(error);
+          // reject(null);
+        }
       );
       });
   });
-   
+}
+
+const createLeitnerTable = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'create table if not exists cards ('+
+                    'id integer primary key not null,' +
+                    'box integer,' +
+                    'card varchar(255),' +
+                    'meaning varchar(255),' +
+                    'comment varchar(255),' +
+                    'timestamp TEXT);',
+        [],
+        () => {
+        },
+        (tx, error) => console.error(error)
+      );
+    });
 }
 export default class LearnWordsScreen extends React.Component {
   constructor(props) {
     super(props);
     
     this.state = {
-    activeIndex: 0,
-    flatListItems: [],
+      activeIndex: 0,
+      flatListItems: [],
+      slider1ActiveSlide: SLIDER_1_FIRST_ITEM,
+      _unsubscribe: null,
     }
     
+    createLeitnerTable();
+
     this.getCardForCarosul(); // Leitner algo
+  }
+
+  componentDidMount() {
+    this._unsubscribe = this.props.navigation.addListener('focus', () => {
+      // do something
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribe();
   }
 
   async getCardForCarosul() {
@@ -160,7 +200,7 @@ export default class LearnWordsScreen extends React.Component {
                   itemWidth={Dimensions.get('window').width}
                   renderItem={this._renderItem}
                   scrollEnabled={false}
-                  onSnapToItem = { index => this.setState({activeIndex:index}) } />
+                  onSnapToItem = { index => this.setState({activeIndex:index}) } />  
             </View>
             <View style={styles.buttons}>
               <Pressable 
@@ -184,53 +224,3 @@ export default class LearnWordsScreen extends React.Component {
     );
   }
 }
-
-const styles = StyleSheet.create ({
-  container: {
-    backgroundColor:'floralwhite',
-    borderRadius: 5,
-    height: 50,
-    padding: 50,
-    flex:1,
-    marginLeft: 25,
-    marginBottom: 25,
-    marginRight: 25, 
-    // justifyContent: "center",
-    // paddingHorizontal: 10
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 50,
-  },
-  meaning: {
-    fontSize: 25,
-    marginBottom: 50,
-  },
-  comment: {
-    fontSize: 15,
-    fontStyle: 'italic'
-  },
-  buttonYes: {
-    alignItems: "flex-end",
-    backgroundColor: "#0F0",
-    padding: 10,
-    paddingHorizontal: 40,
-    textAlign: 'right',
-  },
-  buttonNo: {
-    alignItems: "flex-start",
-    backgroundColor: "#F00",
-    padding: 10,
-    paddingHorizontal: 20,
-    margin: 10,
-  },
-  buttons: {
-    // flex: 1,
-    flexDirection: 'row',
-    alignItems: "center",
-    // backgroundColor: "#DDDDDD",
-    justifyContent: 'space-evenly',
-    padding: 10
-  },
-});
