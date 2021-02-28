@@ -9,6 +9,7 @@ import * as SQLite from 'expo-sqlite';
 import styles, { colors } from '../styles/index.style';
 import Carousel from 'react-native-snap-carousel';
 
+import { getCurrentDate, getDaysAgo } from "../components/DateTime";
 
 const IS_ANDROID = Platform.OS === 'android';
 const SLIDER_1_FIRST_ITEM = 1;
@@ -20,25 +21,15 @@ const db = SQLite.openDatabase('leitnerboxdb.db');
 const latestBox = 3; // Greates litner box number
 const numOfBox1Items = 5;
 
-const getCurrentDate = () => {
-  var date = new Date().getDate(); //Current Date
-    var month = new Date().getMonth() + 1; //Current Month
-    var year = new Date().getFullYear(); //Current Year
-    var hours = new Date().getHours(); //Current Hours
-    var min = new Date().getMinutes(); //Current Minutes
-    var sec = new Date().getSeconds(); //Current Seconds
-    return year +'-'+ month+'-' +date + ' ' + hours + ':' + min + ':' + sec;
-}
-
 const updateDB = (items) => {
-
+  console.log("hey1")
   for (let i = 0; i < items.length; ++i)
   {
     // temp.push(items.item(i));
     db.transaction((tx) => {
       tx.executeSql(
-        'UPDATE cards SET box=?, timestamp=? WHERE id=?',
-        [items[i].box, items[i].timestamp, items[i].id],
+        'UPDATE cards SET box=?, timestamp=DATETIME("now") WHERE id=?',
+        [items[i].box, items[i].id],
         (tx, results) => {
           console.log('Results', results.rowsAffected);
           // if (results.rowsAffected > 0) {
@@ -75,7 +66,7 @@ const fetchCards = async (boxId, numLimit) => {
           },
         (tx, error) => {
           console.error(error);
-          // reject(null);
+          reject(null);
         }
       );
       });
@@ -91,7 +82,7 @@ const createLeitnerTable = () => {
                     'card varchar(255),' +
                     'meaning varchar(255),' +
                     'comment varchar(255),' +
-                    'timestamp TEXT);',
+                    'timestamp DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP);',
         [],
         () => {
         },
@@ -118,6 +109,7 @@ export default class LearnWordsScreen extends React.Component {
   componentDidMount() {
     this._unsubscribe = this.props.navigation.addListener('focus', () => {
       // do something
+      this.getCardForCarosul(); // Leitner algo
     });
   }
 
@@ -132,15 +124,15 @@ export default class LearnWordsScreen extends React.Component {
     temp = await fetchCards(1, numOfBox1Items);
     this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
 
-    // // for box 2
+    // for box 2
     temp = await fetchCards(2, numOfBox1Items);
     this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
 
-    // // for box 3
+    // for box 3
     temp = await fetchCards(3, numOfBox1Items);
     this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
 
-    console.log(this.state.flatListItems)
+    // console.log(this.state.flatListItems)
   }
 
   updateItem(didYouKnow) {
@@ -155,8 +147,7 @@ export default class LearnWordsScreen extends React.Component {
 
     this.state.flatListItems[index] = {
         ...this.state.flatListItems[index],
-        box: box,
-        timestamp:getCurrentDate()}
+        box: box}
     this.setState(this.state.flatListItems)
 
     if(index === this.state.flatListItems.length - 1)

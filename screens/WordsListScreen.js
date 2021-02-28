@@ -51,15 +51,11 @@ const WordsListScreen = ({navigation, route}) => {
             var temp = [];
             for (let i = 0; i < results.rows.length; ++i)
                 temp.push(results.rows.item(i));
-            console.log(temp)
             setFlatListItems(temp);
             },
           (tx, error) => console.error(error)
         );
         });
-
-
-
     });
 
     // Return the function to unsubscribe from the event so it gets removed on unmount

@@ -4,6 +4,8 @@ import { TextInput } from 'react-native-gesture-handler';
 import * as SQLite from 'expo-sqlite';
 import { useReducer } from 'react';
 
+import { getCurrentDate } from "../components/DateTime";
+
 const db = SQLite.openDatabase('leitnerboxdb.db');
 
 
@@ -23,16 +25,6 @@ function reducer(wordItem, action) {
     }
 }
 
-const getCurrentDate = () => {
-  var date = new Date().getDate(); //Current Date
-    var month = new Date().getMonth() + 1; //Current Month
-    var year = new Date().getFullYear(); //Current Year
-    var hours = new Date().getHours(); //Current Hours
-    var min = new Date().getMinutes(); //Current Minutes
-    var sec = new Date().getSeconds(); //Current Seconds
-    return year +'-'+ month+'-' +date + ' ' + hours + ':' + min + ':' + sec;
-}
-
 const addCard = (props) => {
   // is text empty?
   if (props.wordItem.card === null || props.wordItem.card === '') {
@@ -44,8 +36,8 @@ const addCard = (props) => {
   return new Promise((resolve, reject) => {
     db.transaction(
       tx => {
-        tx.executeSql('insert into cards (card, meaning, comment, box, timestamp) values (?, ?, ?, ?,?)',
-        [props.wordItem.card, props.wordItem.meaning, props.wordItem.comment, props.wordItem.box, getCurrentDate()],
+        tx.executeSql('insert into cards (card, meaning, comment, box) values (?, ?, ?, ?)',
+        [props.wordItem.card, props.wordItem.meaning, props.wordItem.comment, props.wordItem.box],
         (tx, results) => {
             console.log('Results', results.rowsAffected);
             if (results.rowsAffected > 0) {
@@ -144,7 +136,7 @@ const AddWrodsScreen = ({navigation, route}) => {
                         'card varchar(255),' +
                         'meaning varchar(255),' +
                         'comment varchar(255),' +
-                        'timestamp TEXT);',
+                        'timestamp DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP);',
             [],
             () => {
             },
