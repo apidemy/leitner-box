@@ -185,6 +185,15 @@ export default class LearnWordsScreen extends React.Component {
 
   render() 
   {
+    if(this.state.flatListItems.length == 0)
+      return(
+        <View style={{flex: 1, backgroundColor:'rebeccapurple', 
+                    paddingTop: 50, flexDirection:'row',
+                    justifyContent: 'center', }}>
+          <Text style={{fontWeight: 'bold',
+                    fontSize: 20,}}>There is No Word to learn.</Text>
+        </View>
+      )
     return(
       <SafeAreaView style={{flex: 1, backgroundColor:'rebeccapurple', paddingTop: 50, }}>
             <View style={{ flex: 1, flexDirection:'row', justifyContent: 'center', }}>

@@ -63,8 +63,6 @@ const WordsListScreen = ({navigation, route}) => {
     return unsubscribe;
   }, [navigation]);
 
-
-
     let [flatListItems, setFlatListItems] = useState([]);
 
     let listViewItemSeparator = () => {
@@ -104,6 +102,16 @@ const WordsListScreen = ({navigation, route}) => {
         );
       };
 
+
+    if(flatListItems.length == 0)
+      return(
+        <View style={{flex: 1, backgroundColor:'rebeccapurple', 
+                    paddingTop: 50, flexDirection:'row',
+                    justifyContent: 'center', }}>
+          <Text style={{fontWeight: 'bold',
+                    fontSize: 20,}}>There is No Word to learn.</Text>
+        </View>
+        )
     return(
 
         <SafeAreaView style={{ flex: 1 }}>
