@@ -12,15 +12,17 @@ const db = SQLite.openDatabase('leitnerboxdb.db');
 function reducer(wordItem, action) {
     switch(action.type) {
       case 'box':
-            return {...wordItem, box: action.value};  
+          return {...wordItem, box: action.value}; 
+      case 'id':
+          return {...wordItem, id: action.value}; 
       case 'card':
             return {...wordItem, card: action.value};
       case 'meaning':
           return {...wordItem, meaning: action.value};
       case 'comment':
           return {...wordItem, comment: action.value};
-      case 'timestamp':
-            return {...wordItem, timestamp: action.value};
+      case '_time':
+          return {...wordItem, _time: action.value};
 
     }
 }
@@ -28,7 +30,6 @@ function reducer(wordItem, action) {
 const addCard = (props) => {
   // is text empty?
   if (props.wordItem.card === null || props.wordItem.card === '') {
-      console.log("no card typed")
       ToastAndroid.show("Type a word to add", ToastAndroid.SHORT);
     return Promise.reject(false);
   }
@@ -36,7 +37,7 @@ const addCard = (props) => {
   return new Promise((resolve, reject) => {
     db.transaction(
       tx => {
-        tx.executeSql('insert into cards (card, meaning, comment, box) values (?, ?, ?, ?)',
+        tx.executeSql('INSERT INTO cards (card, meaning, comment, box) VALUES (?, ?, ?, ?)',
         [props.wordItem.card, props.wordItem.meaning, props.wordItem.comment, props.wordItem.box],
         (tx, results) => {
             console.log('Results', results.rowsAffected);
@@ -63,10 +64,9 @@ const addCard = (props) => {
 const updateWord = (wordItem) => {
     db.transaction((tx) => {
         tx.executeSql(
-          'UPDATE cards set card=?, meaning=? , comment=? where id=?',
+          'UPDATE cards SET card=?, meaning=? , comment=? , _time = DATETIME(\'now\') where id=?',
           [wordItem.card, wordItem.meaning, wordItem.comment, wordItem.id],
           (tx, results) => {
-            console.log('Results', results.rowsAffected);
             if (results.rowsAffected > 0) {
               Alert.alert(
                 'Success',
@@ -114,7 +114,7 @@ const HandleButton = (props) => {
 
 const AddWrodsScreen = ({navigation, route}) => {
 
-    const cardId = route.params;
+    let cardId = route.params?.id;
 
     const [wordItem, dispatchWordItem] = useReducer(reducer, {
         id: cardId,
@@ -122,11 +122,13 @@ const AddWrodsScreen = ({navigation, route}) => {
         card: '',
         meaning: '',
         comment: '',
-        timestamp: '',
+        _time: '',
     });
 
     React.useEffect(() => {
       const unsubscribe = navigation.addListener('focus', () => {
+
+        cardId = route.params?.id;
 
         db.transaction(tx => {
           tx.executeSql(
@@ -136,7 +138,7 @@ const AddWrodsScreen = ({navigation, route}) => {
                         'card varchar(255),' +
                         'meaning varchar(255),' +
                         'comment varchar(255),' +
-                        'timestamp DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP);',
+                        '_time TIMESTAMP  DEFAULT CURRENT_TIMESTAMP);',
             [],
             () => {
             },
@@ -172,7 +174,7 @@ const AddWrodsScreen = ({navigation, route}) => {
 
       // Return the function to unsubscribe from the event so it gets removed on unmount
       return unsubscribe;
-    }, [navigation]);
+    }, [navigation, route.params?.id]);
 
     return(
         <View style = {styles.Container}>
@@ -198,7 +200,6 @@ const AddWrodsScreen = ({navigation, route}) => {
                 />
             </View>
             <HandleButton navigation={navigation} wordItem={wordItem}/>
-            
         </View>
     );
 };

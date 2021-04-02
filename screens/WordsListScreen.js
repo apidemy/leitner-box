@@ -52,6 +52,7 @@ const WordsListScreen = ({navigation, route}) => {
             for (let i = 0; i < results.rows.length; ++i)
                 temp.push(results.rows.item(i));
             setFlatListItems(temp);
+            // console.log(temp);
             },
           (tx, error) => console.error(error)
         );
@@ -89,7 +90,11 @@ const WordsListScreen = ({navigation, route}) => {
             {/* <UpdateButtons cards={this.state} navigation={navigation} id={item.id} /> */}
             <View style={styles.flexRow}>
             <View style={styles.changeButtons}>
-                <Button title="Edit" onPress={() => navigation.navigate('AddWords', item.id)}/>
+                <Button title="Edit" onPress={() =>{
+                  console.log(item.id)
+                 navigation.navigate('AddWords', {id: item.id})
+                 }
+                 }/>
             </View>
             <View style={styles.changeButtons}>
                 <Button title="Delete" onPress={ () => deleteWord(item.id, setFlatListItems, flatListItems)}/>

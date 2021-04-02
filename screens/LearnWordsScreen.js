@@ -19,44 +19,43 @@ const SLIDER_1_FIRST_ITEM = 1;
 const db = SQLite.openDatabase('leitnerboxdb.db');
 
 const latestBox = 3; // Greates litner box number
-const numOfBox1Items = 5;
+const numOfBox1Items = 1;
 
-const updateDB = (items) => {
-  console.log("hey1")
-  for (let i = 0; i < items.length; ++i)
-  {
-    // temp.push(items.item(i));
-    db.transaction((tx) => {
-      tx.executeSql(
-        'UPDATE cards SET box=?, timestamp=DATETIME("now") WHERE id=?',
-        [items[i].box, items[i].id],
-        (tx, results) => {
-          console.log('Results', results.rowsAffected);
-          // if (results.rowsAffected > 0) {
-          //   Alert.alert(
-          //     'Success',
-          //     'User updated successfully',
-          //     [
-          //       {
-          //         text: 'Ok',
-          //         // onPress: () => navigation.navigate('HomeScreen'),
-          //       },
-          //     ],
-          //     { cancelable: false }
-          //   );
-          // } else alert('Updation Failed');
-        }
-      );
-    });
-  }
+const updateDB = async (items) => 
+{
+  return new Promise( (resolve, reject) => {
+
+    let numOfUpdate = 0;
+    for (let i = 0; i < items.length; ++i)
+    {
+      // temp.push(items.item(i));
+      db.transaction((tx) => {
+        tx.executeSql(
+          'UPDATE cards SET box=?, comment = "" , _time=DATETIME(\'now\')) WHERE id=?',
+          [items[i].box, items[i].id],
+          (tx, results) => {
+            if (results.rowsAffected > 0) {
+              numOfUpdate++;
+            } else {
+              alert('Updation Failed');
+              reject(0)
+            }
+          }
+        );
+      });
+    }
+    resolve(numOfUpdate)
+  });
 }
 
-const fetchCards = async (boxId, numLimit) => {
+const fetchCards = async (boxId, pastDays, numLimit) => {
 
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-          'SELECT * FROM cards WHERE box=? LIMIT ?;',
+          `SELECT * FROM cards WHERE box = ?
+          AND _time >= (Select DATETIME('now', "-${pastDays} day"))
+          LIMIT ?;`,
           [boxId, numLimit],
           (tx, results) => {
           let temp = [];
@@ -65,8 +64,7 @@ const fetchCards = async (boxId, numLimit) => {
           resolve(temp);
           },
         (tx, error) => {
-          console.error(error);
-          reject(null);
+          // console.error(error);
         }
       );
       });
@@ -82,7 +80,7 @@ const createLeitnerTable = () => {
                     'card varchar(255),' +
                     'meaning varchar(255),' +
                     'comment varchar(255),' +
-                    'timestamp DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP);',
+                    '_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP);',
         [],
         () => {
         },
@@ -109,6 +107,7 @@ export default class LearnWordsScreen extends React.Component {
   componentDidMount() {
     this._unsubscribe = this.props.navigation.addListener('focus', () => {
       // do something
+      this.setState({flatListItems: []})
       this.getCardForCarosul(); // Leitner algo
     });
   }
@@ -120,22 +119,23 @@ export default class LearnWordsScreen extends React.Component {
   async getCardForCarosul() {
     let temp =  [];
 
-    // for box 1
-    temp = await fetchCards(1, numOfBox1Items);
-    this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
+    // for box 1 every 1 day
+    temp = await fetchCards(1, 1, numOfBox1Items);
+    if(temp != null)
+      this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
 
-    // for box 2
-    temp = await fetchCards(2, numOfBox1Items);
-    this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
+    // for box 2 every 3 day
+    temp = await fetchCards(2, 3, numOfBox1Items);
+    if(temp != null)
+      this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
 
-    // for box 3
-    temp = await fetchCards(3, numOfBox1Items);
-    this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
-
-    // console.log(this.state.flatListItems)
+    // for box 3 every 5 day
+    temp = await fetchCards(3, 5, numOfBox1Items);
+    if(temp != null)
+      this.setState({flatListItems: [...this.state.flatListItems, ...temp]})
   }
 
-  updateItem(didYouKnow) {
+   updateItem(didYouKnow) {
 
     let index = this.state.activeIndex;
     let box = this.state.flatListItems[index].box;
@@ -152,17 +152,23 @@ export default class LearnWordsScreen extends React.Component {
 
     if(index === this.state.flatListItems.length - 1)
       {
-        updateDB(this.state.flatListItems);
-        Alert.alert(
-          'Review finished',
-          'All todays words reviewed',
-          [
-            {
-              title: 'Ok',
-              onPress: () => {this.props.navigation.navigate("Home")},
-            }
-          ], {}
-        );
+        // TODO: use async to get result of updateDB
+        updateDB(this.state.flatListItems)
+
+        // if(res === this.state.flatListItems.length)
+        {
+          Alert.alert(
+            'Review finished',
+            'All todays words reviewed',
+            [
+              {
+                title: 'Ok',
+                onPress: () => {this.props.navigation.navigate("Home")},
+              }
+            ], {}
+          );
+        }
+
       }
   }
 
