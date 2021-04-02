@@ -98,12 +98,11 @@ const CoutCardsToReview = async (res) =>
 const HomeScreen = ({navigation, route}) => {
 
     const [cardsCount, setCardsCount] = useState(0);
-    const [boxCount, setBoxCount] = useState(0);
+    const [cardsToReview, setBoxCount] = useState(0);
+    createLeitnerTable()
 
     useEffect(() => {
             const unsubscribe = navigation.addListener('focus', () => {
-
-            createLeitnerTable()
 
             getCardItems(setCardsCount);
 
@@ -119,7 +118,7 @@ const HomeScreen = ({navigation, route}) => {
             <View>
                 <Text style={styles.font}>Profile Sates</Text>
                 <Text style={styles.font}>Total cards: {cardsCount}</Text>
-                <Text style={styles.font}>You should review {boxCount} cards</Text>
+                <Text style={styles.font}>You should review {cardsToReview} cards</Text>
             </View>
         </View>
     );

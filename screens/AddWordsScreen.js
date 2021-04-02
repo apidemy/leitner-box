@@ -87,6 +87,7 @@ const updateWord = (wordItem) => {
 };
 
 const HandleButton = (props) => {
+  console.log(props.wordItem)
   if(props.wordItem.id == undefined || props.wordItem.id < 0) {
     return (
       <View>
@@ -129,6 +130,7 @@ const AddWrodsScreen = ({navigation, route}) => {
       const unsubscribe = navigation.addListener('focus', () => {
 
         cardId = route.params?.id;
+        console.log(cardId)
 
         db.transaction(tx => {
           tx.executeSql(

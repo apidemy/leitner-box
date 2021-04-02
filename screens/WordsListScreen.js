@@ -81,10 +81,12 @@ const WordsListScreen = ({navigation, route}) => {
         return (
           <View
             key={item.id}
-            style={{ backgroundColor: 'white', padding: 20 }}>
-            <Text>Word: {item.card}</Text>
-            <Text>Meaning: {item.meaning}</Text>
-            <Text>Comment: {item.comment}</Text>
+            style={styles.listArea}>
+            <View style={styles.mainText}>
+              <Text style={styles.headline}>Word: {item.card}</Text>
+              <Text style={styles.headline}>Meaning: {item.meaning}</Text>
+              <Text style={styles.headline}>Comment: {item.comment}</Text>
+            </View>
             {/* <UpdateButtons cards={this.state} navigation={navigation} id={item.id} /> */}
             <View style={styles.flexRow}>
             <View style={styles.changeButtons}>
@@ -114,7 +116,7 @@ const WordsListScreen = ({navigation, route}) => {
         )
     return(
 
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={styles.container}>
         <Text
           style={{
             fontSize: 18,
@@ -163,7 +165,8 @@ const styles = StyleSheet.create({
     listArea: {
       backgroundColor: '#f0f0f0',
       flex: 1,
-      paddingTop: 16
+      paddingTop: 16,
+      alignItems: 'center',
     },
     sectionContainer: {
       marginBottom: 16,
@@ -179,7 +182,18 @@ const styles = StyleSheet.create({
         // width: 50,
         // backgroundColor: 'rgba(0,0,0,0)'
         
-    }
+    },
+    mainText: {
+      flex: 1,
+      flexDirection: 'column',
+      // backgroundColor: 'lightgray',
+      justifyContent: 'center',
+    },
+    headline: {
+      fontWeight: 'bold',
+      fontSize: 18,
+      paddingBottom: 10,
+    },
   });
 
 export default WordsListScreen;

@@ -109,6 +109,8 @@ export default class LearnWordsScreen extends React.Component {
       // do something
       this.setState({flatListItems: []})
       this.getCardForCarosul(); // Leitner algo
+      this.props.navigation.setOptions({ tabBarBadge: this.state.flatListItems.length })
+      console.log(this.state.flatListItems.length)
     });
   }
 

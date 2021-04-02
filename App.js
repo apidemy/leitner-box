@@ -44,7 +44,7 @@ export default function App() {
           }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="LearnWords" component={LearnWordsScreen}  options={{ tabBarBadge: 5 }} />
+        <Tab.Screen name="LearnWords" component={LearnWordsScreen}  options={{ tabBarBadge: 0 }} />
         <Tab.Screen name="AddWords" component={AddWrodsScreen} />
         <Tab.Screen name="WordsList" component={WordsListScreen}/>
       </Tab.Navigator>
